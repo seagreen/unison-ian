@@ -1,0 +1,49 @@
+playChip _ = run chips
+
+run : UI model input -> {IO} ()
+run ui =
+  str = !readLine
+  case parseInput ui str of
+    Left e ->
+      printLine ("Invalid input: " ++ e)
+
+    Right input ->
+      printLine ("Valid input!")
+
+---
+
+-- CLI MVU
+
+unique type UI model input =
+  { init : Model
+  , view : model -> Text
+  , update : input -> model -> model
+  , parseInput : Text -> Either Text input
+  }
+
+-- First game
+
+chips : UI Model Input
+chips = UI init view update parseGameInput
+
+unique type Model = Model
+
+unique type Input = Input
+
+init : Model
+init = Model
+
+view : Model -> Text
+view _ = ""
+
+update : Input -> Model -> Model
+update _ m = m
+
+parseGameInput : Text -> Either Text Input
+parseGameInput t =
+  if t == "w"
+    then
+      Right Input
+
+    else
+      Left "Not recognized"
