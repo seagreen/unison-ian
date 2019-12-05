@@ -1,15 +1,3 @@
-playChip _ = run chips
-
-run : UI model input -> {IO} ()
-run ui =
-  str = !readLine
-  case parseInput ui str of
-    Left e ->
-      printLine ("Invalid input: " ++ e)
-
-    Right input ->
-      printLine ("Valid input!")
-
 ---
 
 -- CLI MVU
@@ -21,7 +9,19 @@ unique type UI model input =
   , parseInput : Text -> Either Text input
   }
 
+run : UI model input -> {IO} ()
+run ui =
+  str = !readLine
+  case parseInput ui str of
+    Left e ->
+      printLine ("Invalid input: " ++ e)
+
+    Right input ->
+      printLine ("Valid input!")
+
 -- First game
+
+playChip _ = run chips
 
 chips : UI Model Input
 chips = UI init view update parseGameInput
