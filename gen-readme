@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-unison-to-markdown --namespace "ian.game" > game.md
+unison-to-markdown --namespace "ian" > game.md
