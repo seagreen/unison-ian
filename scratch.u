@@ -28,7 +28,7 @@ chips = UI init view update parseGameInput
 
 unique type Model = Model
 
-unique type Input = Input
+unique type Input = North | South | East | West
 
 init : Model
 init = Model
@@ -41,9 +41,38 @@ update _ m = m
 
 parseGameInput : Text -> Either Text Input
 parseGameInput t =
-  if t == "w"
-    then
-      Right Input
-
+  if t == "w" then Right North
+  else
+    if t == "s" then Right South
     else
-      Left "Not recognized"
+      if t == "d" then Right East
+      else if t == "a" then Right West else Left "Not recognized"
+
+-- .ian.Nat
+
+decrement : Nat -> Optional Nat
+decrement n =
+  if n == 0
+    then None
+    else Some (Int.truncate0 (Nat.toInt n Int.- +1))
+
+-- these didn't work:
+-- (got: The expression in red needs the {.builtin.io.IO} ability, but this location does not have access to any abilities.)
+--
+-- use test.v1
+-- test> tests.decrement.ex1 = run (expect (decrement 0 == None))
+-- test> tests.decrement.ex2 = run (expect (decrement 1 == Some 0))
+-- test> tests.decrement.ex3 = run (expect (decrement 2 == Some 1))
+
+-- .ian.List
+
+repeat : Nat -> a -> [a]
+repeat n a =
+  case Nat.decrement n of
+    None ->
+      []
+
+    Some newN ->
+      a +: repeat newN a
+
+> repeat 5 "A"
