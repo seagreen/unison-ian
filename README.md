@@ -12,4 +12,4 @@ Right now it contains a single unfinished game.
 
 # Code
 
-See [./game.md](game.md).
+See [./game.md](game.md)
