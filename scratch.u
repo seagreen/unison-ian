@@ -1,8 +1,50 @@
+view : Model -> Text
+view m =
+  let
+    intToNat : Int -> Optional Nat
+    intToNat n =
+      if n < +0
+        then None
+        else Some (truncate0 n)
+
+    replaceAt : Int -> Int -> a -> [[a]] -> [[a]]
+    replaceAt xInt yInt a matrix =
+      case (intToNat xInt, intToNat yInt) of
+        (Some x, Some y) ->
+          case at y matrix of
+            None -> matrix
+            Some list ->
+              replace y (replace x a list) matrix
+
+        _ ->
+          matrix
+
+    -- assuming width of 80 and height of 40
+    replaceCoordinate : Int -> Int -> a -> [[a]] -> [[a]]
+    replaceCoordinate x y a =
+      replaceAt (x + +40) (negate y + +20) a
+
+    case m of
+      Model (x,y) ->
+          emptyBoard : [[Char]]
+          emptyBoard = repeat 40 (repeat 80 ?\s)
+
+          board = replaceCoordinate x y ?+ emptyBoard
+
+          showLine t = "|" Text.++ fromCharList t ++ "|"
+
+          barLine = repeat 80 ?-
+
+          unlines
+            (List.map
+              showLine
+              (barLine +: board :+ barLine))
+
 ---
 
 -- .ian.game.hardtack
 
-unique type Model = Model
+unique type Model = Model (Int, Int)
 
 unique type Input = North | South | East | West
 
@@ -12,15 +54,30 @@ hardtack : UI Model Input
 hardtack = UI init view update parseInput
 
 init : Model
-init = Model
+init = Model (+10, +10)
+
+update : Input -> Model -> Model
+update i m =
+  case m of
+    Model (x,y) ->
+      case i of
+        Input.North -> Model (x, y + +1)
+        Input.South -> Model (x, y - +1)
+        Input.East  -> Model (x + +1, y)
+        Input.West  -> Model (x - +1, y)
 
 view : Model -> Text
 view _ =
-  use Text ++
-  fromCharList (repeat 80 ?-) ++ "\n" ++ fromCharList (repeat 80 ?.)
+  let
+    board : [Text]
+    board = repeat 30 ""
 
-update : Input -> Model -> Model
-update _ m = m
+    unlines
+      (map
+        (t -> "|" ++ t)
+        ([ fromCharList (repeat 80 ?-) ] ++ board))
+
+> view Model
 
 parseInput : Text -> Either Text Input
 parseInput t =
@@ -96,3 +153,11 @@ intersperse separator xs =
         join (foldl f [[y]] ys)
 
 > intersperse 0 [1,2,3,4]
+
+-- .ian.Text
+
+unlines : [Text] -> Text
+unlines =
+  foldl (acc t -> acc ++ t ++ "\n") ""
+
+> unlines ["aaa","bbb","ccc"]
