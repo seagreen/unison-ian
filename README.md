@@ -6,9 +6,9 @@ Right now it contains a single unfinished game.
 
 # Play
 
-1. Install unison
+1. Install Unison and add this codebase to yours
 
-2. `./play`
+2. `unison run .ian.game.hardtack.play`
 
 # Code
 
