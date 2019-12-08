@@ -1,13 +1,3 @@
-init : Model
-init =
-  Model
-    (Position +10 +8)
-    (Map.singleton "Hadrian" (Fort (Position +5 +5) Active 1 40))
-    1
-    100
-
----- Anything below this line is ignored by Unison.
-
 ---
 
 unique type Position = { xCoordinate : Int, yCoordinate : Int }
