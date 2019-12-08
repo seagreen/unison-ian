@@ -1,5 +1,69 @@
 ---
 
+view : Model -> Text
+view m =
+  width = 40
+  height = 20
+  intToNat : Int -> Optional Nat
+  intToNat n = if n < +0 then None else Some (truncate0 n)
+  replaceAt : Int -> Int -> a -> [[a]] -> [[a]]
+  replaceAt xInt yInt a matrix =
+    case (intToNat xInt, intToNat yInt) of
+      (Some x, Some y) ->
+        case List.at y matrix of
+          None -> matrix
+          Some list -> replace y (replace x a list) matrix
+      _ -> matrix
+  replaceCoordinate : Int -> Int -> a -> [[a]] -> [[a]]
+  replaceCoordinate x y a =
+    use Int +
+    replaceAt (x + +20) (negate y + +10) a
+  fortImage fort = case status fort of
+                     Status.Active -> ?#
+                     Status.Destoyed -> ?o
+  addForts : Map Text Fort -> [[Char]] -> [[Char]]
+  addForts forts matrix =
+    use Fort position
+    foldl
+      (acc fort ->
+        let
+        replaceCoordinate
+          (xCoordinate (position fort))
+          (yCoordinate (position fort)) (fortImage fort) acc
+        )
+      matrix
+      (values forts)
+  x = xCoordinate (Model.position m)
+  y = yCoordinate (Model.position m)
+  emptyBoard : [[Char]]
+  emptyBoard = repeat 20 (repeat width ?\s)
+  board = replaceCoordinate x y ?+ (addForts (forts m) emptyBoard)
+  showLine t =
+    use Text ++
+    "|" ++ fromCharList t ++ "|"
+  barLine = repeat width ?-
+  yourStatus =
+    use Text ++
+         "Your ship: hull "
+      ++ Nat.toText (hull m)
+      ++ ", cannons "
+      ++ cannonStatus (cannons m)
+  enemyStatus =
+    case adjacentToFort m of
+      None -> []
+      Some (name, fort) ->
+        desc = case status fort of
+                 Active ->  "hull unknown, cannons " ++ cannonStatus (cannon fort)
+                 Destoyed -> "destroyed"
+        use Text ++
+        [name ++ ": " ++ desc]
+  unlines
+    (        [yourStatus]
+    List.++ enemyStatus
+    List.++ List.map showLine (barLine +: board :+ barLine))
+
+---
+
 unique type Position = { xCoordinate : Int, yCoordinate : Int }
 
 unique type Model = { position : Position , forts: Map Text Fort, cannons : Nat, hull : Nat}
