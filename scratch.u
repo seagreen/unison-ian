@@ -1,10 +1,42 @@
-init : Model
-init = Model (+11, +11) (Map.singleton "Hadrian" (Fort (+10, +10) Active))
+---
 
----- Anything below this line is ignored by Unison.
+Int.abs : Int -> Int
+Int.abs n =
+  if n < +0 then n * -1 else n
+
+adjacentToFort : Model -> Optional (Text, Fort)
+adjacentToFort m =
+  case position m of
+    (x, y) ->
+      f : (Text, Fort) -> Boolean
+      f a =
+        case a of
+          (name, Fort (fx, fy) _) ->
+            use Int - toFloat
+            ((Int.abs (x - fx)) <= +1 && (Int.abs (y - fy) <= +1))
+      first (filter f (Map.toList (forts m)))
+
+init : Model
+init =
+  Model.Model
+    (+11, +11) (Map.singleton "Hadrian" (Fort (+10, +10) Active))
+
+update : Input -> Model -> Model
+update i m =
+  use Model Model
+  case m of
+    Model (x, y) forts ->
+      use Int + -
+      case i of
+        Input.North -> Model (x, y + +1) forts
+        Input.South -> Model (x, y - +1) forts
+        Input.East -> Model (x + +1, y) forts
+        Input.West -> Model (x - +1, y) forts
 
 view : Model -> Text
 view m =
+  width = 40
+  height = 20
   intToNat : Int -> Optional Nat
   intToNat n = if n < +0 then None else Some (truncate0 n)
   replaceAt : Int -> Int -> a -> [[a]] -> [[a]]
@@ -18,7 +50,56 @@ view m =
   replaceCoordinate : Int -> Int -> a -> [[a]] -> [[a]]
   replaceCoordinate x y a =
     use Int +
-    replaceAt (x + +40) (negate y + +20) a
+    replaceAt (x + +20) (negate y + +10) a
+  addForts : Map Text Fort -> [[Char]] -> [[Char]]
+  addForts forts matrix =
+    foldl
+      (acc fort -> (case fort of Fort (x, y) _ -> replaceCoordinate x y ?o acc))
+      matrix
+      (values forts)
+  case m of
+    Model.Model (x, y) forts ->
+      emptyBoard : [[Char]]
+      emptyBoard = repeat 20 (repeat width ?\s)
+      board = replaceCoordinate x y ?+ (addForts forts emptyBoard)
+      showLine t =
+        use Text ++
+        "|" ++ fromCharList t ++ "|"
+      barLine = repeat width ?-
+      status =
+        case adjacentToFort m of
+          None -> ""
+          Some (name, _) -> name
+      unlines (status +: List.map showLine (barLine +: board :+ barLine))
+
+---- Anything below this line is ignored by Unison.
+
+---
+
+unique type Model = { position : (Int, Int) , forts: Map Text Fort }
+
+---- Anything below this line is ignored by Unison.
+
+---- Anything below this line is ignored by Unison.
+
+view : Model -> Text
+view m =
+  width = 40
+  height = 20
+  intToNat : Int -> Optional Nat
+  intToNat n = if n < +0 then None else Some (truncate0 n)
+  replaceAt : Int -> Int -> a -> [[a]] -> [[a]]
+  replaceAt xInt yInt a matrix =
+    case (intToNat xInt, intToNat yInt) of
+      (Some x, Some y) ->
+        case List.at y matrix of
+          None -> matrix
+          Some list -> replace y (replace x a list) matrix
+      _ -> matrix
+  replaceCoordinate : Int -> Int -> a -> [[a]] -> [[a]]
+  replaceCoordinate x y a =
+    use Int +
+    replaceAt (x + +20) (negate y + +10) a
   addForts : Map Text Fort -> [[Char]] -> [[Char]]
   addForts forts matrix =
     foldl
@@ -28,168 +109,49 @@ view m =
   case m of
     Model (x, y) forts ->
       emptyBoard : [[Char]]
-      emptyBoard = repeat 40 (repeat 80 ?\s)
+      emptyBoard = repeat 20 (repeat width ?\s)
       board = replaceCoordinate x y ?+ (addForts forts emptyBoard)
       showLine t =
         use Text ++
         "|" ++ fromCharList t ++ "|"
-      barLine = repeat 80 ?-
-      status = case adjacentToFort m of
-                 None ->
-                   ""
-                 Some (name, _) ->
-                   name
+      barLine = repeat width ?-
+      status =
+        case adjacentToFort m of
+          None -> ""
+          Some (name, _) -> name
       unlines (status +: List.map showLine (barLine +: board :+ barLine))
 
 ---- Anything below this line is ignored by Unison.
 
-adjacentToFort : Model -> Optional (Text, Fort)
-adjacentToFort m =
+update : Input -> Model -> Model
+update i m =
   case m of
-    Model (x,y) forts ->
-      f : (Text, Fort) -> Boolean
-      f a =
-        case a of
-          (name, Fort (fx, fy) _) ->
-            (abs (toFloat (x - fx)) <= 1.0) && (abs (toFloat (y - fy)) <= 1.0)
-
-      first (filter f (Map.toList forts))
+    Model (x, y) forts ->
+      use Int + -
+      case i of
+        Input.North -> Model (x, y + +1) forts
+        Input.South -> Model (x, y - +1) forts
+        Input.East -> Model (x + +1, y) forts
+        Input.West -> Model (x - +1, y) forts
 
 ---- Anything below this line is ignored by Unison.
 
-view : Model -> Text
-view m =
-  intToNat : Int -> Optional Nat
-  intToNat n = if n < +0 then None else Some (truncate0 n)
-  replaceAt : Int -> Int -> a -> [[a]] -> [[a]]
-  replaceAt xInt yInt a matrix =
-    case (intToNat xInt, intToNat yInt) of
-      (Some x, Some y) ->
-        case List.at y matrix of
-          None -> matrix
-          Some list -> replace y (replace x a list) matrix
-      _ -> matrix
-  replaceCoordinate : Int -> Int -> a -> [[a]] -> [[a]]
-  replaceCoordinate x y a =
-    use Int +
-    replaceAt (x + +40) (negate y + +20) a
-
-  addForts : Map Text Fort -> [[Char]] -> [[Char]]
-  addForts forts matrix =
-    foldl (acc fort -> case fort of
-                         Fort (x,y) _ -> replaceCoordinate x y ?o acc)
-      matrix
-      (Map.values forts)
-
-  case m of
-    Model (x, y) forts ->
-      emptyBoard : [[Char]]
-      emptyBoard = repeat 40 (repeat 80 ?\s)
-      board = replaceCoordinate x y ?+ (addForts forts emptyBoard)
-      showLine t =
-        use Text ++
-        "|" ++ fromCharList t ++ "|"
-      barLine = repeat 80 ?-
-      unlines (List.map showLine (barLine +: board :+ barLine))
-
 ---
 
-unique type Status = Active | Destoyed
+unique type Model = Model (Int, Int) (Map Text Fort)
 
-unique type Fort = Fort (Int, Int) Status
+---- Anything below this line is ignored by Unison.
 
 unique type Model = Model (Int, Int) (Map Text Fort)
 
 ---
 
-view : Model -> Text
-view m =
-  let
-    intToNat : Int -> Optional Nat
-    intToNat n =
-      if n < +0
-        then None
-        else Some (truncate0 n)
+-- .ian.game.hardtack (excerpts)
 
-    replaceAt : Int -> Int -> a -> [[a]] -> [[a]]
-    replaceAt xInt yInt a matrix =
-      case (intToNat xInt, intToNat yInt) of
-        (Some x, Some y) ->
-          case at y matrix of
-            None -> matrix
-            Some list ->
-              replace y (replace x a list) matrix
+unique type Status = Active | Destoyed
 
-        _ ->
-          matrix
+unique type Fort = Fort (Int, Int) Status
 
-    -- assuming width of 80 and height of 40
-    replaceCoordinate : Int -> Int -> a -> [[a]] -> [[a]]
-    replaceCoordinate x y a =
-      replaceAt (x + +40) (negate y + +20) a
-
-    case m of
-      Model (x,y) ->
-          emptyBoard : [[Char]]
-          emptyBoard = repeat 40 (repeat 80 ?\s)
-
-          board = replaceCoordinate x y ?+ emptyBoard
-
-          showLine t = "|" Text.++ fromCharList t ++ "|"
-
-          barLine = repeat 80 ?-
-
-          unlines
-            (List.map
-              showLine
-              (barLine +: board :+ barLine))
-
----
-
--- .ian.game.hardtack
-
-
-unique type Input = North | South | East | West
-
-play _ = run hardtack
-
-hardtack : UI Model Input
-hardtack = UI init view update parseInput
-
-init : Model
-init = Model (+10, +10)
-
-update : Input -> Model -> Model
-update i m =
-  case m of
-    Model (x,y) ->
-      case i of
-        Input.North -> Model (x, y + +1)
-        Input.South -> Model (x, y - +1)
-        Input.East  -> Model (x + +1, y)
-        Input.West  -> Model (x - +1, y)
-
-view : Model -> Text
-view _ =
-  let
-    board : [Text]
-    board = repeat 30 ""
-
-    unlines
-      (map
-        (t -> "|" ++ t)
-        ([ fromCharList (repeat 80 ?-) ] ++ board))
-
-> view Model
-
-parseInput : Text -> Either Text Input
-parseInput t =
-  if t == "w" then Right North
-  else
-    if t == "s" then Right South
-    else
-      if t == "d" then Right East
-      else if t == "a" then Right West else Left "Not recognized"
 
 -- .ian.cli.mvu
 
