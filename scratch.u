@@ -70,6 +70,8 @@ unique type Model = { position : Position , forts: Map Text Fort, cannons : Nat,
 
 unique type Fort = { position : Position, status : Status, cannon : Nat, health : Nat }
 
+unique type UI model input = { init : model, view : model -> Text, update : input -> model -> model, parseInput : Text -> Either Text input, shouldExit : model -> Optional Text }
+
 -- ctrl-r "
 
 -- .ian.Nat
